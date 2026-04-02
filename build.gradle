@@ -1,0 +1,42 @@
+apply plugin: 'java'
+apply plugin: 'javacard'
+
+project.ext.set("com.fidesmo.gradle.javacard.home", "sdks/jc304_kit")
+
+buildscript {
+  repositories {
+    maven { url 'http://releases.marmeladburk.fidesmo.com/' }
+    mavenCentral()
+    maven { url 'https://jitpack.io' }
+    maven { url 'https://mvn.javacard.pro/maven/' }
+  }
+
+  dependencies {
+    classpath 'com.fidesmo:gradle-javacard:0.2.7'
+  }
+}
+
+javacard {
+  sdkVersion = "3.0.4"
+
+  cap {
+    aid = '0xA0:0x00:0x00:0x08:0x04:0x00:0x02'
+    packageName = 'im.status.keycard.math'
+    version = '1.0'
+  }
+}
+
+repositories {
+  mavenCentral()
+  maven { url 'https://jitpack.io' }
+  maven { url 'https://mvn.javacard.pro/maven/' }
+}
+
+dependencies {
+  // No external dependencies needed for stub implementation
+}
+
+compileJava {
+  sourceCompatibility = 1.6
+  targetCompatibility = 1.6
+}
