@@ -137,7 +137,7 @@ public class BigNumberMath {
    * Performs modular reduction: a = a mod n, only works for SECP256k1.
    */
   public void modRed(byte[] a, short aOff, short aLen, byte[] n, short nOff, short nLen) {
-    short divisorShift = (short) (MULT_OUT_SIZE - n.length);
+    short divisorShift = (short) (aLen - nLen);
     short divisionRound = 0;
 
     short firstDivisorDigit = (short) (n[(short) 0] & MOD_DIGIT_MASK);
@@ -150,7 +150,7 @@ public class BigNumberMath {
     short multiple;
 
     while (divisorShift >= 0) {
-      while (!shiftLesser(a, aOff, divisorShift, (short) (divisionRound > 0 ? divisionRound - 1 : 0), n)) {
+      while (!shiftLesser(a, aOff, aLen, divisorShift, (short) (divisionRound > 0 ? divisionRound - 1 : 0), n, nLen)) {
         dividendDigits = divisionRound == 0 ? 0 : (short) ((short) (a[(short) (aOff + divisionRound - 1)]) << MOD_DIGIT_LEN);
         dividendDigits |= (short) (a[(short)(aOff + divisionRound)] & MOD_DIGIT_MASK);
 
@@ -163,7 +163,7 @@ public class BigNumberMath {
 
           dividendDigits = shiftBits(dividendDigits,
                                       divisionRound < (short) (MULT_OUT_SIZE - 1) ? a[(short) (aOff + divisionRound + 1)] : 0,
-                                      divisionRound < (short) (n.length - 2) ? a[(short) (aOff + divisionRound + 2)] : 0,
+                                      divisionRound < (short) (nLen - 2) ? a[(short) (aOff + divisionRound + 2)] : 0,
                                       bitShift);
           divisorDigit = shiftBits(firstDivisorDigit, secondDivisorDigit, thirdDivisorDigit, bitShift);
         }
@@ -174,7 +174,7 @@ public class BigNumberMath {
           multiple = 1;
         }
 
-        timesMinus(a, aOff, divisorShift, multiple, n);
+        timesMinus(a, aOff, aLen, divisorShift, multiple, n, nLen);
       }
 
       divisionRound++;
@@ -308,16 +308,16 @@ public class BigNumberMath {
   /**
    * Checks if value shifted is less than divisor.
    */
-  private static boolean shiftLesser(byte[] value, short offset, short shift, short start, byte[] n) {
+  private static boolean shiftLesser(byte[] value, short offset, short len, short shift, short start, byte[] n, short nLen) {
     short j;
 
-    j = (short) (n.length + shift - MULT_OUT_SIZE + start);
+    j = (short) (nLen + shift - len + start);
     short valShort, divisorShort;
 
-    for (short i = start; i < MULT_OUT_SIZE; i++, j++) {
+    for (short i = start; i < len; i++, j++) {
       valShort = (short) (value[(short)(i + offset)] & MOD_DIGIT_MASK);
 
-      if (j >= 0 && j < (short) n.length) {
+      if (j >= 0 && j < (short) nLen) {
         divisorShort = (short) (n[j] & MOD_DIGIT_MASK);
       }
       else {
@@ -336,11 +336,11 @@ public class BigNumberMath {
   /**
    * Subtracts multiple of divisor from value.
    */
-  private void timesMinus(byte[] value, short offset, short shift, short mult, byte[] n) {
+  private void timesMinus(byte[] value, short offset, short len, short shift, short mult, byte[] n, short nLen) {
     short accu = 0;
     short subtractionResult;
-    short i = (short) (MULT_OUT_SIZE - 1 - shift);
-    short j = (short) (n.length - 1);
+    short i = (short) (len - 1 - shift);
+    short j = (short) (nLen - 1);
 
     for (; i >= 0 && j >= 0; i--, j--) {
       accu = (short) (accu + (short) (mult * (n[j] & MOD_DIGIT_MASK)));
